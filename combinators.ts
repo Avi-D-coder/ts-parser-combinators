@@ -8,6 +8,12 @@ interface Transformation {
   (input : any) : any;
 }
 
+// We need some way to refer back to previously defined rules and the easiest way I can
+// think of doing that is with closures.
+interface ParserProducer {
+  (input : any) : Parser;
+}
+
 // Indexable object. The parsers deal with it indirectly through IndexableContext instances.
 interface Indexable {
   [index : number] : any
@@ -72,6 +78,10 @@ class Parser {
   // Convenience method so that we don't have to type "new BasicParser" over and over.
   static m(matcher : Matcher) : Parser {
     return new BasicParser(matcher);
+  }
+
+  static delay(producer : ParserProducer) : Parser {
+    return new DelayedParser(producer);
   }
 
 }
@@ -221,6 +231,19 @@ class KleeneStarParser extends Parser {
 
   parse(input : IndexableContext) : Array<any> {
     return this.parser.many().optional().parse(input);
+  }
+
+}
+
+// A little bit hard to explain this one but basically we have something that will generate a parser
+// so we generate the parser by calling it and then use that to parse the input.
+class DelayedParser extends Parser {
+
+  constructor(public producer : ParserProducer) { super(); }
+
+  parse(input : IndexableContext) : any {
+    var parser : Parser = this.producer(input);
+    return parser.parse(input);
   }
 
 }
