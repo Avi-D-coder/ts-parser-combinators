@@ -1,0 +1,1 @@
+Some basic parser combinators. Not as pretty as in a language that supports operator overloading but still pretty good. Looking at the example grammar and parsing some s-expressions with `Grammar.parse` is a pretty good way to get a handle on it. The example grammar demonstrates pretty much all the combinators and how to handle recursion with `Parser.delay`.
