@@ -28,6 +28,7 @@ class IndexableContext {
 
   constructor(public input : Indexable) { 
     this.current_index = 0;
+    this.current_element = input[this.current_index];
   }
 
   advance() : number {
@@ -38,6 +39,7 @@ class IndexableContext {
 
   reset(index : number) : void {
     this.current_index = index;
+    this.current_element = this.input[this.current_index];
   }
 
 }
