@@ -77,6 +77,11 @@ class Parser {
     return new KleeneStarParser(this);
   }
 
+  // We only care about null values when parsing because that indicates failure.
+  is_not_null(obj : any) : boolean {
+    return !(null === obj);
+  }
+
   // Convenience method so that we don't have to type "new BasicParser" over and over.
   static m(matcher : Matcher) : Parser {
     return new BasicParser(matcher);
@@ -156,7 +161,7 @@ class SequenceParser extends Parser {
     var result_accumulator : Array<any> = [];
     while (this.sequence[parser_index]) {
       var parse_result : any = this.sequence[parser_index].parse(input);
-      if (parse_result) {
+      if (this.is_not_null(parse_result)) {
         result_accumulator.push(parse_result);
         parser_index += 1;
       } else {
@@ -175,7 +180,7 @@ class TransformParser extends Parser {
 
   parse(input : IndexableContext) : any {
     var result : any = this.parser.parse(input);
-    if (result) {
+    if (this.is_not_null(result)) {
       return this.transform(result);
     }
     return null;
@@ -192,11 +197,11 @@ class ManyParser extends Parser {
   parse(input : IndexableContext) : Array<any> {
     var accumulator : Array<any> = [];
     var first_result : any = this.parser.parse(input);
-    if (first_result) {
+    if (this.is_not_null(first_result)) {
       accumulator.push(first_result);
       var current_index = input.current_index;
       var result : any = this.parser.parse(input);
-      while (result) {
+      while (this.is_not_null(result)) {
         accumulator.push(result);
         current_index = input.current_index;
         result = this.parser.parse(input);
@@ -216,7 +221,7 @@ class OptionalParser extends Parser {
   parse(input : IndexableContext) : Array<any> {
     var current_index : number = input.current_index;
     var result : any = this.parser.parse(input);
-    if (result) {
+    if (this.is_not_null(result)) {
       return result;
     } else {
       input.reset(current_index);
