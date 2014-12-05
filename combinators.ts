@@ -77,9 +77,9 @@ class Parser {
     return new KleeneStarParser(this);
   }
 
-  // We only care about null values when parsing because that indicates failure.
+  // We only care about null/undefined values when parsing because that indicates failure.
   is_not_null(obj : any) : boolean {
-    return !(null === obj);
+    return !(null === obj || undefined === obj);
   }
 
   // Convenience method so that we don't have to type "new BasicParser" over and over.

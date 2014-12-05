@@ -15,10 +15,10 @@ class Grammar {
     (x : Array<string>) : string => x.join(''));
 
   // Left paren.
-  static lparen : Parser = Parser.m(x => '(' == x);
+  static lparen : Parser = Parser.m(x => '(' == x).transformer(x => "");
 
   // Right paren.
-  static rparen : Parser = Parser.m(x => ')' == x);
+  static rparen : Parser = Parser.m(x => ')' == x).transformer(x => "");
 
   // Number or symbol.
   static atom : Parser = Grammar.num.or(Grammar.symbol);
@@ -28,14 +28,19 @@ class Grammar {
     (x : Array<string>) : Array<string> => []);
 
   // Non-empty list: (s_expr s-expr*).
-  static non_empty_list : Parser = Grammar.lparen.then(Grammar._).then(Grammar.s_expr).then(
-    Grammar._).then(Parser.delay(x => Grammar.s_expr.zero_or_more())).then(Grammar.rparen);
+  static non_empty_list : Parser = Grammar.lparen.then(
+    Parser.delay(x => Grammar.s_expr)).then(
+      Parser.delay(x => Grammar.s_expr.zero_or_more())).then(Grammar.rparen).transformer(
+        x => [x[1]].concat(x[2]));
 
   // s-expr: atom | empty list | non-empty list.
-  static s_expr : Parser = Grammar.atom.or(Grammar.empty_list).or(Grammar.non_empty_list);
+  static s_expr : Parser = Grammar._.then(
+    Grammar.atom.or(Grammar.empty_list).or(Grammar.non_empty_list)).then(
+      Grammar._).transformer(x => x[1]);
 
+  // Parse the top level s-expression.
   static parse(input : Indexable) {
-    return Grammar.empty_list.parse(new IndexableContext(input));
+    return Grammar.s_expr.parse(new IndexableContext(input));
   }
 
 }
