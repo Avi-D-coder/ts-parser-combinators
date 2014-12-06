@@ -82,6 +82,11 @@ class Parser {
     return !(null === obj || undefined === obj);
   }
 
+  // Convenience method for wrapping indexable into a context and calling parse on it.
+  parse_input(input : Indexable) : any {
+    return this.parse(new IndexableContext(input));
+  }
+
   // Convenience method so that we don't have to type "new BasicParser" over and over.
   static m(matcher : Matcher) : Parser {
     return new BasicParser(matcher);

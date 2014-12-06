@@ -40,7 +40,7 @@ class Grammar {
 
   // Parse the top level s-expression.
   static parse(input : Indexable) {
-    return Grammar.s_expr.parse(new IndexableContext(input));
+    return Grammar.s_expr.parse_input(input);
   }
 
 }
