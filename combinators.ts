@@ -26,15 +26,14 @@ class IndexableContext {
 
   current_element : any;
 
-  constructor(public input : Indexable) { 
+  constructor(private input : Indexable) { 
     this.current_index = 0;
     this.current_element = input[this.current_index];
   }
 
-  advance() : number {
+  advance() : void {
     this.current_index += 1;
     this.current_element = this.input[this.current_index]
-    return this.current_index;
   }
 
   reset(index : number) : void {
