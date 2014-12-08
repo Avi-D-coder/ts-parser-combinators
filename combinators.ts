@@ -100,7 +100,7 @@ class Parser {
 // Basic parser that just calls the matcher and advances the input or returns a failure.
 class BasicParser extends Parser {
 
-  constructor(public matcher : Matcher) { super(); }
+  constructor(private matcher : Matcher) { super(); }
 
   parse(input : IndexableContext) : any {
     var current_element : any = input.current_element;
