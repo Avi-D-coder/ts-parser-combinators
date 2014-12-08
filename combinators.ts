@@ -104,7 +104,7 @@ class BasicParser extends Parser {
 
   parse(input : IndexableContext) : any {
     var current_element : any = input.current_element;
-    if (is_not_null(current_element) && this.matcher(current_element)) {
+    if (this.is_not_null(current_element) && this.matcher(current_element)) {
       input.advance();
       return current_element;
     }
