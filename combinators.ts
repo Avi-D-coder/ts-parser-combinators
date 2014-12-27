@@ -66,6 +66,9 @@ class Parser {
   is_not_null(obj : any) : boolean {
     return !(null === obj || undefined === obj);
   }
+  is_null(obj : any) : boolean {
+    return null === obj || undefined === obj;
+  }
   // Convenience method for wrapping indexable into a context and calling parse on it.
   parse_input(input : Indexable) : any {
     return this.parse(new IndexableContext(input));
@@ -108,7 +111,7 @@ class AlternationParser extends Parser {
     var current_index : number = input.current_index;
     var parser_index : number = 0;
     var result : any = null;
-    while (this.alternatives[parser_index] && !result) {
+    while (this.alternatives[parser_index] && this.is_null(result)) {
       input.reset(current_index);
       result = this.alternatives[parser_index].parse(input);
       parser_index += 1;
