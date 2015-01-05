@@ -15,5 +15,12 @@ Notice in the above examples that any function that takes a single element from 
 ```
 var match_abc : Parser = Parser.m(x => x === 'abc');
 var match_def : Parser = Parser.m(x => x === 'def');
-// etc.
+var match_hij : Parser = Parser.m(x => x === 'hij');
 ```
+
+## Non-base parsers
+Once you have the base parsers for the basic lexical elements it is time to combine them into compound parsers. There are two very basic constructors to master here and almost everything else is either reducible to those two or is close enough in semantics that you won't lose anything even if you pretend they are reducible.
+
+### Alternation
+
+### Sequencing
