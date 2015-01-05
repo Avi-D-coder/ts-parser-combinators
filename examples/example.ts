@@ -1,4 +1,4 @@
-/// <reference path="combinators.ts"/>
+/// <reference path="../combinators.ts"/>
 
 class Grammar {
   
