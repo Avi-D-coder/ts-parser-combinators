@@ -22,5 +22,13 @@ var match_hij : Parser = Parser.m(x => x === 'hij');
 Once you have the base parsers for the basic lexical elements it is time to combine them into compound parsers. There are two very basic constructors to master here and almost everything else is either reducible to those two or is close enough in semantics that you won't lose anything even if you pretend they are reducible.
 
 ### Alternation
+Just like with regular expressions you sometimes want to express the structure of something as a set of alternatives. For example, to test the set of integers and pick out all the two digit numbers that start with '2' or '3' you could use `/(2|3)[0-9]/`. The pipe, `|`, is also known as the alternation operator/combinator and the same thing exists for parser combinators. TypeScript does not have operator overloading so the alternation combinator is a method instead of a symbol. To combine two parsers using alternation you use the `.or` method. The regular expression example expressed as a parser would look like as follows
+
+```
+var match_2 : Parser = Parser.m(x => x === '2');
+var match_2 : Parser = Parser.m(x => x === '3');
+var match_digit : Parser = Parser.m(x => /\d/.test(x));
+var regex_parser : Parser = (match_2.or(match_3)).then(match_digit);
+```
 
 ### Sequencing
