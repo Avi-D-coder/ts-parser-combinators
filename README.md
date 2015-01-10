@@ -41,3 +41,17 @@ var match_2 : Parser = Parser.m(x => x === '2');
 var match_3 : Parser = Parser.m(x => x === '3');
 var match_23 : Parser = match_2.then(match_3);
 ```
+
+### Delaying
+This one is best demonstrated with an example because when writing recursive rules we can't immediately evaluate the parsing expression that we are recursively defining. We have to delay the evaluation of the expression by wrapping it in a function and that's where `Parser.delay` comes in. Here's an example for parsing nested brackets, e.g. `[]`, `[[]]`, `[[[]]]`, etc.
+
+```
+var lbracket : Parser = Parser.m(x => '[' === x);
+var rbracket : Parser = Parser.m(x => ']' === x);
+var brackets : Parser = lbracket.then(Parser.delay(_ => brackets.zero_or_more())).then(rbracket);
+```
+
+We need to use `Parser.delay` because `brackets` is not completely defined when we reach the point of recursively calling it. By delaying the evaluation of the middle expression in `brackets` until parse time we circumvent the problem of recursively using unfinished expressions.
+
+### Transforming
+Usually the whole point of parsing something is to create some kind of tree-like data structure so that code further down the line can work with a more explicit representation of the structure that is implicit in the textual/serialized representation. That's where `.transformer` method comes in. This one also is best demonstrated with an example.
