@@ -48,7 +48,8 @@ This one is best demonstrated with an example because when writing recursive rul
 ```
 var lbracket : Parser = Parser.m(x => '[' === x);
 var rbracket : Parser = Parser.m(x => ']' === x);
-var brackets : Parser = lbracket.then(Parser.delay(_ => brackets.zero_or_more())).then(rbracket);
+var brackets : Parser = lbracket.then(Parser.delay(
+  _ => brackets.zero_or_more())).then(rbracket);
 ```
 
 We need to use `Parser.delay` because `brackets` is not completely defined when we reach the point of recursively calling it. By delaying the evaluation of the middle expression in `brackets` until parse time we circumvent the problem of recursively using unfinished expressions.
