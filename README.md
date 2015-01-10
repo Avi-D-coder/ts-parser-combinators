@@ -54,4 +54,62 @@ var brackets : Parser = lbracket.then(Parser.delay(_ => brackets.zero_or_more())
 We need to use `Parser.delay` because `brackets` is not completely defined when we reach the point of recursively calling it. By delaying the evaluation of the middle expression in `brackets` until parse time we circumvent the problem of recursively using unfinished expressions.
 
 ### Transforming
-Usually the whole point of parsing something is to create some kind of tree-like data structure so that code further down the line can work with a more explicit representation of the structure that is implicit in the textual/serialized representation. That's where `.transformer` method comes in. This one also is best demonstrated with an example.
+Usually the whole point of parsing something is to create some kind of tree-like data structure so that code further down the line can work with a more explicit representation of the structure that is implicit in the textual/serialized representation. That's where `.transformer` method comes in. This one also is best demonstrated with a simple example.
+
+```
+var num_string : Parser = Parser.m(x => /\d/.test(x)).many();
+var num : Parser = num_string.transformer(digits => parseInt(digits.join(''), 10));
+```
+
+The result of `num.parse_input('101')` is going to be the actual number `101`.
+
+### Putting it all together
+Putting all the previous combinators together here is the example from peg.js documentation for parsing arithmetic expressions with `+` and `*`.
+
+```
+class Arithmetic {
+
+  // whitespace
+  static _ = Parser.m(x => /\s/.test(x)).zero_or_more();
+
+  // (
+  static lparen = Parser.m(x => '(' === x);
+
+  // )
+  static rparen = Parser.m(x => ')' === x);
+
+  // +
+  static plus = Parser.m(x => '+' === x);
+
+  // *
+  static times = Parser.m(x => '*' === x);
+
+  // sequence of digits converted to an actual number
+  static num = Parser.m(x => /\d/.test(x)).many().transformer(
+    digits => parseInt(digits.join(''), 10));
+
+  // multiplicative + additive / multiplicative
+  static additive : Parser = ((Parser.delay(_ => Arithmetic.multiplicative).then(Arithmetic._).then(
+    Arithmetic.plus).then(Arithmetic._).then(
+      Parser.delay(_ => Arithmetic.additive))).transformer(
+        (x : Array<any>) => x[0] + x[4])).or(Parser.delay(_ => Arithmetic.multiplicative));
+
+  // primary * multiplicative / primary
+  static multiplicative : Parser = (Parser.delay(_ => Arithmetic.primary).then(Arithmetic._).then(
+    Arithmetic.times).then(Arithmetic._).then(
+      Parser.delay(_ => Arithmetic.multiplicative))).transformer(
+        x => x[0] * x[4]).or(Parser.delay(_ => Arithmetic.primary));
+
+  // num / (additive)
+  static primary = Arithmetic.num.or((Arithmetic.lparen.then(Arithmetic._).then(
+    Arithmetic.additive).then(Arithmetic._).then(Arithmetic.rparen)).transformer(
+      x => x[2]));
+
+  static parse(input : string) : number {
+    return Arithmetic.additive.parse_input(input);
+  }
+
+}
+```
+
+Not as terse as the peg.js syntax but good enough. You can find the above example in `examples/arithmetic.ts`.
