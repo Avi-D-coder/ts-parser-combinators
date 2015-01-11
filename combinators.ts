@@ -70,10 +70,16 @@ class Parser {
   }
   // We only care about null/undefined values when parsing because that indicates failure.
   is_not_null(obj : any) : boolean {
-    return !this.is_null(obj);
+    if (null === obj || undefined === obj) {
+      throw new Error('Null or undefined.');
+    }
+    return true;
   }
   is_null(obj : any) : boolean {
-    return null === obj || undefined === obj;
+    if (!(null === obj || undefined === obj)) {
+      throw new Error('Not null or undefined.');
+    }
+    return true;
   }
   // Convenience method for wrapping indexable into a context and calling parse on it.
   parse_input(input : Indexable) : any {
@@ -92,7 +98,7 @@ class Parser {
 class BasicParser extends Parser {
   // The basic parser is a wrapper around a matcher that drives the context based on the result
   // of the matcher.
-  constructor(private matcher : Matcher) { super(); }
+  constructor(private matcher : Matcher) { super(); this.is_not_null(matcher); }
   // Advance and return the element if matcher succeeds and return null otherwise.
   parse(input : IndexableContext) : any {
     var current_element : any = input.current_element;
@@ -105,10 +111,12 @@ class BasicParser extends Parser {
 // Corresponds to "e | f".
 class AlternationParser extends Parser {
   // Keep the altenratives in an array.
-  alternatives : Array<Parser>;
+  private alternatives : Array<Parser>;
   // We always start with at least two parsers.
-  constructor(left : Parser, right : Parser) {
+  constructor(private left : Parser, private right : Parser) {
     super();
+    this.is_not_null(left);
+    this.is_not_null(right);
     this.alternatives = [left, right]
   }
   // Override or to append to the current list of parsers and return self for easy chaining.
@@ -132,10 +140,12 @@ class AlternationParser extends Parser {
 // Corresponds to "e f".
 class SequenceParser extends Parser {
   // Same as for parsing alternatives we keep the sequence of parsers in an array.
-  sequence : Array<Parser>;
+  private sequence : Array<Parser>;
   // We always start with a sequence of at least two parsers.
-  constructor(left : Parser, right : Parser) {
+  constructor(private left : Parser, private right : Parser) {
     super();
+    this.is_not_null(left);
+    this.is_not_null(right);
     this.sequence = [left, right];
   }
   // Override then to append to the current parser sequence and return self for easy chaining.
@@ -162,7 +172,11 @@ class SequenceParser extends Parser {
 // Transforms the matched results.
 class TransformParser extends Parser {
   // Wraps the parser and the corresponding transformation.
-  constructor(public parser : Parser, public transform : Transformation) { super(); }
+  constructor(private parser : Parser, private transform : Transformation) { 
+    super(); 
+    this.is_not_null(parser);
+    this.is_not_null(transform);
+  }
   // Parse and pass the non-null results to the transformer and return that as the result.
   // Note: returning null from the transformer indicates failure and is probably not desired.
   parse(input : IndexableContext) : any {
@@ -176,7 +190,10 @@ class TransformParser extends Parser {
 // Greedly parse as many times as possible. Corresponds to "e+".
 class ManyParser extends Parser {
   // Wraps the underlying parser so that it can be used as many times as possible.
-  constructor(public parser : Parser) { super(); }
+  constructor(private parser : Parser) { 
+    super(); 
+    this.is_not_null(parser);
+  }
   // Parse once and then continue parsing as long as possible until failure. 
   parse(input : IndexableContext) : Array<any> {
     var accumulator : Array<any> = [];
@@ -199,7 +216,10 @@ class ManyParser extends Parser {
 // Corresponds to "e?". Always succeeds by returning either an empty array or an array with one element.
 class OptionalParser extends Parser {
   // Wraps the underlying parser we want to speculatively parse.
-  constructor(public parser : Parser) { super(); }
+  constructor(private parser : Parser) { 
+    super(); 
+    this.is_not_null(parser);
+  }
   // Always succeeds so either returns an array with one element or an empty array.
   // Not sure if there is a better way to do this.
   parse(input : IndexableContext) : Array<any> {
@@ -216,7 +236,10 @@ class OptionalParser extends Parser {
 // Corresponds to "e*".
 class KleeneStarParser extends Parser {
   // Wrap the parser so we can call it zero or more times.
-  constructor(public parser : Parser) { super(); }
+  constructor(private parser : Parser) { 
+    super(); 
+    this.is_not_null(parser);
+  }
   // We can just delegate to existing definitions so no need to define it from scratch.
   parse(input : IndexableContext) : Array<any> {
     return this.parser.many().optional().parse(input);
@@ -226,7 +249,10 @@ class KleeneStarParser extends Parser {
 // and then use that to parse the input.
 class DelayedParser extends Parser {
   // Wrap the generator.
-  constructor(public producer : ParserProducer) { super(); }
+  constructor(private producer : ParserProducer) { 
+    super(); 
+    this.is_not_null(producer);
+  }
   // Pass the context to the generator and then use the result of that as the parser.
   parse(input : IndexableContext) : any {
     var parser : Parser = this.producer(input);
