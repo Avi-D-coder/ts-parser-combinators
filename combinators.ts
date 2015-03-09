@@ -235,14 +235,17 @@ class OptionalParser extends Parser {
 }
 // Corresponds to "e*".
 class KleeneStarParser extends Parser {
+  // Generate and keep the parser during construction.
+  private kleene_star_parser : Parser;
   // Wrap the parser so we can call it zero or more times.
-  constructor(private parser : Parser) { 
+  constructor(parser : Parser) { 
     super(); 
     this.is_not_null(parser);
+    this.kleene_star_parser = parser.many().optional();
   }
   // We can just delegate to existing definitions so no need to define it from scratch.
   parse(input : IndexableContext) : Array<any> {
-    return this.parser.many().optional().parse(input);
+    return this.kleene_star_parser.parse(input);
   }
 }
 // Basically we have something that will generate a parser so we generate the parser by calling this
