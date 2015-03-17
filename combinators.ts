@@ -70,10 +70,7 @@ class Parser {
   }
   // We only care about null/undefined values when parsing because that indicates failure.
   is_not_null(obj : any) : boolean {
-    if (null === obj || undefined === obj) {
-      throw new Error('Null or undefined.');
-    }
-    return true;
+    return !(null === obj || undefined === obj);
   }
   is_null(obj : any) : boolean {
     if (!(null === obj || undefined === obj)) {
@@ -98,7 +95,10 @@ class Parser {
 class BasicParser extends Parser {
   // The basic parser is a wrapper around a matcher that drives the context based on the result
   // of the matcher.
-  constructor(private matcher : Matcher) { super(); this.is_not_null(matcher); }
+  constructor(private matcher : Matcher) {
+    super();
+    if (!this.is_not_null(matcher)) { throw new Error(); }
+  }
   // Advance and return the element if matcher succeeds and return null otherwise.
   parse(input : IndexableContext) : any {
     var current_element : any = input.current_element;
@@ -115,8 +115,8 @@ class AlternationParser extends Parser {
   // We always start with at least two parsers.
   constructor(private left : Parser, private right : Parser) {
     super();
-    this.is_not_null(left);
-    this.is_not_null(right);
+    if (!this.is_not_null(left)) { throw new Error(); }
+    if (!this.is_not_null(right)) { throw new Error(); }
     this.alternatives = [left, right]
   }
   // Override or to append to the current list of parsers and return self for easy chaining.
@@ -144,8 +144,8 @@ class SequenceParser extends Parser {
   // We always start with a sequence of at least two parsers.
   constructor(private left : Parser, private right : Parser) {
     super();
-    this.is_not_null(left);
-    this.is_not_null(right);
+    if (!this.is_not_null(left)) { throw new Error(); }
+    if (!this.is_not_null(right)) { throw new Error(); }
     this.sequence = [left, right];
   }
   // Override then to append to the current parser sequence and return self for easy chaining.
@@ -174,8 +174,8 @@ class TransformParser extends Parser {
   // Wraps the parser and the corresponding transformation.
   constructor(private parser : Parser, private transform : Transformation) { 
     super(); 
-    this.is_not_null(parser);
-    this.is_not_null(transform);
+    if (!this.is_not_null(parser)) { throw new Error(); }
+    if (!this.is_not_null(transform)) { throw new Error(); }
   }
   // Parse and pass the non-null results to the transformer and return that as the result.
   // Note: returning null from the transformer indicates failure and is probably not desired.
@@ -192,7 +192,7 @@ class ManyParser extends Parser {
   // Wraps the underlying parser so that it can be used as many times as possible.
   constructor(private parser : Parser) { 
     super(); 
-    this.is_not_null(parser);
+    if (!this.is_not_null(parser)) { throw new Error(); }
   }
   // Parse once and then continue parsing as long as possible until failure. 
   parse(input : IndexableContext) : Array<any> {
@@ -218,7 +218,7 @@ class OptionalParser extends Parser {
   // Wraps the underlying parser we want to speculatively parse.
   constructor(private parser : Parser) { 
     super(); 
-    this.is_not_null(parser);
+    if (!this.is_not_null(parser)) { throw new Error(); }
   }
   // Always succeeds so either returns an array with one element or an empty array.
   // Not sure if there is a better way to do this.
@@ -240,7 +240,7 @@ class KleeneStarParser extends Parser {
   // Wrap the parser so we can call it zero or more times.
   constructor(parser : Parser) { 
     super(); 
-    this.is_not_null(parser);
+    if (!this.is_not_null(parser)) { throw new Error(); }
     this.kleene_star_parser = parser.many().optional();
   }
   // We can just delegate to existing definitions so no need to define it from scratch.
@@ -254,7 +254,7 @@ class DelayedParser extends Parser {
   // Wrap the generator.
   constructor(private producer : ParserProducer) { 
     super(); 
-    this.is_not_null(producer);
+    if (!this.is_not_null(producer)) { throw new Error(); }
   }
   // Pass the context to the generator and then use the result of that as the parser.
   parse(input : IndexableContext) : any {
