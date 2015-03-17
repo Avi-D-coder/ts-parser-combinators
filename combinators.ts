@@ -73,10 +73,7 @@ class Parser {
     return !(null === obj || undefined === obj);
   }
   is_null(obj : any) : boolean {
-    if (!(null === obj || undefined === obj)) {
-      throw new Error('Not null or undefined.');
-    }
-    return true;
+    return null === obj || undefined === obj;
   }
   // Convenience method for wrapping indexable into a context and calling parse on it.
   parse_input(input : Indexable) : any {
