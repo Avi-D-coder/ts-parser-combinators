@@ -68,6 +68,14 @@ class Parser {
   zero_or_more() : Parser {
     return new KleeneStarParser(this);
   }
+  // Positive lookahead.
+  affirm() : Parser {
+    return new PositiveLookaheadParser(this);
+  }
+  // Negative lookahead.
+  deny() : Parser {
+    return new NegativeLookaheadParser(this);
+  }
   // We only care about null/undefined values when parsing because that indicates failure.
   is_not_null(obj : any) : boolean {
     return !(null === obj || undefined === obj);
@@ -103,6 +111,34 @@ class BasicParser extends Parser {
       input.advance(); return current_element;
     }
     return null;
+  }
+}
+// Try to parse and if successful reset the counter and return parsed value.
+class PositiveLookaheadParser extends Parser {
+  constructor(private parser : Parser) { super(); }
+  parse(input : IndexableContext) : any {
+    var current_index = input.current_index;
+    var result = this.parser.parse(input);
+    if (result) {
+      input.reset(current_index);
+      return result;
+    } else {
+      return null;
+    }
+  }
+}
+// Dual of the above. Return null if successful and true otherwise after resetting the counter.
+class NegativeLookaheadParser extends Parser {
+  constructor(private parser : Parser) { super(); }
+  parse(input : IndexableContext) : any {
+    var current_index = input.current_index;
+    var result = this.parser.parse(input);
+    if (result) {
+      return null;
+    } else {
+      input.reset(current_index);
+      return true;
+    }
   }
 }
 // Corresponds to "e | f".
