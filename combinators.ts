@@ -17,6 +17,10 @@ interface ParserProducer {
 interface EventCodeBlock {
   (input : IndexableContext) : void;
 }
+// Guard code block.
+interface GuardCodeBlock {
+  (input : IndexableContext) : boolean;
+}
 // Indexable object. The parsers deal with it indirectly through IndexableContext instances.
 interface Indexable {
   [index : number] : any
@@ -92,6 +96,10 @@ class Parser {
   on_failure(block : EventCodeBlock) {
     return new OnFailureParser(this, block);
   }
+  // Generate a guard for this parser so that we only invoke it if the guard suceeds.
+  guard(block : GuardCodeBlock) {
+    return new GuardParser(this, block);
+  }
   // We only care about null/undefined values when parsing because that indicates failure.
   is_not_null(obj : any) : boolean {
     return !(null === obj || undefined === obj);
@@ -125,6 +133,19 @@ class BasicParser extends Parser {
     var current_element : any = input.current_element;
     if (this.is_not_null(current_element) && this.matcher(current_element)) {
       input.advance(); return current_element;
+    }
+    return null;
+  }
+}
+// Verify some condition before calling the parser.
+class GuardParser extends Parser {
+  constructor(private parser : Parser, private block : GuardCodeBlock) {
+    super();
+    if (this.is_null(block)) { throw new Error(); }
+  }
+  parse(input : IndexableContext) : any {
+    if (this.block(input)) {
+      return this.parser.parse(input);
     }
     return null;
   }
