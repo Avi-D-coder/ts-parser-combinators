@@ -32,10 +32,13 @@ class IndexableContext {
   current_index : number;
   // The actual element the index is pointing to.
   current_element : any;
+  // Keep a cache of parser results;
+  cache : any;
   // Wraps an array-like object that supports integer indexing.
   constructor(private input : Indexable) { 
     this.current_index = 0;
     this.current_element = input[this.current_index];
+    this.cache = {};
   }
   // Go forward 1 in the input stream.
   advance() : void {
@@ -143,19 +146,24 @@ class BasicParser extends Parser {
 }
 // Caches the results of the parser it wraps.
 class CachingParser extends Parser {
-  private stash : any;
   constructor(private parser : Parser) {
     super();
-    this.stash = {};
   }
   parse(input : IndexableContext) : any {
-    if (this.stash[input.current_index] === undefined) {
+    if (!input.cache[<any>this]) {
+      input.cache[<any>this] = {};
+    }
+    var cache : any = input.cache[<any>this];
+    if (cache[input.current_index] === undefined) {
       var starting_index = input.current_index;
       var result = this.parser.parse(input);
-      this.stash[starting_index] = result;
+      var ending_index = input.current_index;
+      cache[starting_index] = [result, ending_index];
       return result;
     }
-    return this.stash[input.current_index];
+    var result_pair = cache[input.current_index];
+    input.reset(result_pair[1]);
+    return result_pair[0];
   }
 }
 // Verify some condition before calling the parser.
@@ -316,7 +324,7 @@ class TransformParser extends Parser {
     }
     return null;
   }
-}
+}  
 // Greedly parse as many times as possible. Corresponds to "e+".
 class ManyParser extends Parser {
   // Wraps the underlying parser so that it can be used as many times as possible.
