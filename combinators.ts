@@ -143,19 +143,19 @@ class BasicParser extends Parser {
 }
 // Caches the results of the parser it wraps.
 class CachingParser extends Parser {
-  private cache : any;
+  private stash : any;
   constructor(private parser : Parser) {
     super();
-    this.cache = {};
+    this.stash = {};
   }
   parse(input : IndexableContext) : any {
-    if (this.cache[input.current_index] === undefined) {
+    if (this.stash[input.current_index] === undefined) {
       var starting_index = input.current_index;
       var result = this.parser.parse(input);
-      this.cache[starting_index] = result;
+      this.stash[starting_index] = result;
       return result;
     }
-    return this.cache[input.current_index];
+    return this.stash[input.current_index];
   }
 }
 // Verify some condition before calling the parser.
