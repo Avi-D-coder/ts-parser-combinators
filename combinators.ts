@@ -96,6 +96,10 @@ class Parser {
   on_failure(block : EventCodeBlock) {
     return new OnFailureParser(this, block);
   }
+  // Add a cache to the parser so that it is not invoked at the same position more than once.
+  cache() {
+    return new CachingParser(this);
+  }
   // Generate a guard for this parser so that we only invoke it if the guard suceeds.
   guard(block : GuardCodeBlock) {
     return new GuardParser(this, block);
@@ -135,6 +139,23 @@ class BasicParser extends Parser {
       input.advance(); return current_element;
     }
     return null;
+  }
+}
+// Caches the results of the parser it wraps.
+class CachingParser extends Parser {
+  private cache : any;
+  constructor(private parser : Parser) {
+    super();
+    this.cache = {};
+  }
+  parse(input : IndexableContext) : any {
+    if (this.cache[input.current_index] === undefined) {
+      var starting_index = input.current_index;
+      var result = this.parser.parse(input);
+      this.cache[starting_index] = result;
+      return result;
+    }
+    return this.cache[input.current_index];
   }
 }
 // Verify some condition before calling the parser.
