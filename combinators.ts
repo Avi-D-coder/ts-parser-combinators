@@ -13,9 +13,9 @@ interface Transformation {
 interface ParserProducer {
   (input : IndexableContext) : Parser;
 }
-// Event code blocks.
+// Event code blocks. Takes the context and any relevant results.
 interface EventCodeBlock {
-  (input : IndexableContext) : void;
+  (input : IndexableContext, result : any) : void;
 }
 // Guard code block.
 interface GuardCodeBlock {
@@ -117,6 +117,10 @@ class Parser {
   on_failure(block : EventCodeBlock) {
     return new OnFailureParser(this, block);
   }
+  // Run after parsing with the wrapped parser.
+  on_exit(block : EventCodeBlock) {
+    return new OnExitParser(this, block);
+  }
   // Add a cache to the parser so that it is not invoked at the same position more than once.
   cache() {
     return new CachingParser(this);
@@ -164,6 +168,17 @@ class BasicParser extends Parser {
       input.advance(); return current_element;
     }
     return null;
+  }
+}
+class OnExitParser extends Parser {
+  constructor(private parser : Parser, private block : EventCodeBlock) {
+    super();
+    if (this.is_null(block)) { throw new Error(); }
+  }
+  parse(input : IndexableContext) {
+    var result = this.parser.parse(input);
+    this.block(input, result);
+    return result;
   }
 }
 // Parse and if successful place a cut to prevent backtracking.
@@ -223,7 +238,7 @@ class OnFailureParser extends Parser {
   parse(input : IndexableContext) : any {
     var result = this.parser.parse(input);
     if (this.is_null(result)) {
-      this.block(input);
+      this.block(input, result);
     }
     return result;
   }
@@ -237,7 +252,7 @@ class OnSuccessParser extends Parser {
   parse(input : IndexableContext) : any {
     var result = this.parser.parse(input);
     if (this.is_not_null(result)) {
-      this.block(input);
+      this.block(input, result);
     }
     return result;
   }
@@ -249,7 +264,7 @@ class OnEnterParser extends Parser {
     if (this.is_null(block)) { throw new Error(); }
   }
   parse(input : IndexableContext) : any {
-    this.block(input);
+    this.block(input, null);
     return this.parser.parse(input);
   }
 }
