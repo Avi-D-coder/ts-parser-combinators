@@ -65,6 +65,12 @@ class IndexableContext {
 }
 // The base class for all the parsers.
 class Parser {
+  // Give parsers a name so that web tools can give us the name when we look at the stack.
+  name : string;
+  set_name(n : string) {
+    this.name = n;
+    return this;
+  }
   // Must be implemented in the subclasses.
   parse(input : IndexableContext) : any { throw new Error('Must implement in subclass.'); }
   // Convenience method for alternation.
