@@ -34,11 +34,19 @@ class IndexableContext {
   current_element : any;
   // Keep a cache of parser results;
   cache : any;
+  // Cut point prevents backtracking beyond this point.
+  private cut_point : number;
+  // Description of why the cut was placed.
+  private cut_reason : string;
   // Wraps an array-like object that supports integer indexing.
   constructor(private input : Indexable) { 
     this.current_index = 0;
     this.current_element = input[this.current_index];
     this.cache = {};
+  }
+  cut(reason : string) {
+    this.cut_point = this.current_index;
+    this.cut_reason = reason;
   }
   // Go forward 1 in the input stream.
   advance() : void {
@@ -47,6 +55,10 @@ class IndexableContext {
   }
   // Reset the index to the given number. Used when parsers need to rewind.
   reset(index : number) : void {
+    if (index < this.cut_point) {
+      console.log('Cut point: ', this.cut_point, '. Cut reason: ', this.cut_reason, '. Backtrack point: ', index);
+      throw new Error('Can not backtrack beyond current cut point.');
+    }
     this.current_index = index;
     this.current_element = this.input[this.current_index];
   }
@@ -107,6 +119,10 @@ class Parser {
   guard(block : GuardCodeBlock) {
     return new GuardParser(this, block);
   }
+  // Place a cut to prevent backtracking.
+  cut(reason : string) {
+    return new CutParser(this, reason);
+  }
   // We only care about null/undefined values when parsing because that indicates failure.
   is_not_null(obj : any) : boolean {
     return !(null === obj || undefined === obj);
@@ -142,6 +158,19 @@ class BasicParser extends Parser {
       input.advance(); return current_element;
     }
     return null;
+  }
+}
+// Parse and if successful place a cut to prevent backtracking.
+class CutParser extends Parser {
+  constructor(private parser : Parser, private reason : string) {
+    super();
+  }
+  parse(input : IndexableContext) : any {
+    var result = this.parser.parse(input);
+    if (result !== null) {
+      input.cut(this.reason);
+    }
+    return result;
   }
 }
 // Caches the results of the parser it wraps.
