@@ -22,27 +22,17 @@ THE SOFTWARE. */
 
 // Generic predicate. The fundamental parsers delegate to matchers when deciding whether to
 // accept or reject something in the input stream.
-interface Matcher {
-  (input: any): boolean
-}
+type Matcher = (input: any) => boolean
 // If we only parsed the input and did nothing with it then we would just have recognizers.
 // This is just a generic function interface for transforming parsed input.
-interface Transformation {
-  (input: any): any
-}
+type Transformation = (input: any) => any
 // Wrapping generation of a parser in a function is the easiest way to make it recursive and also
 // allow it to refer to rules that have not yet been created.
-interface ParserProducer {
-  (input: IndexableContext): Parser
-}
+type ParserProducer = (input: IndexableContext) => Parser
 // Event code blocks. Takes the context and any relevant results.
-interface EventCodeBlock {
-  (input: IndexableContext, result: any): void
-}
+type EventCodeBlock = (input: IndexableContext, result: any) => void
 // Guard code block.
-interface GuardCodeBlock {
-  (input: IndexableContext): boolean
-}
+type GuardCodeBlock = (input: IndexableContext) => boolean
 // Indexable object. The parsers deal with it indirectly through IndexableContext instances.
 interface Indexable {
   [index: number]: any
